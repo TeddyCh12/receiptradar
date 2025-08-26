@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NODE_ENV: development
       DATABASE_URL: file:./ci.db
       NEXT_PUBLIC_APP_NAME: Receipt Radar
       NEXT_TELEMETRY_DISABLED: 1
