@@ -1,17 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // SQLite uses file: URLs; Postgres will be a real URL
 const DbUrl = z
   .string()
-  .min(1, "DATABASE_URL is required")
-  .refine((v) => v.startsWith("file:") || /^postgres(?:ql)?:\/\//.test(v), {
+  .min(1, 'DATABASE_URL is required')
+  .refine((v) => v.startsWith('file:') || /^postgres(?:ql)?:\/\//.test(v), {
     message: 'DATABASE_URL must be "file:..." (dev) or a Postgres URL',
   });
 
 const schema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: DbUrl,
-  NEXT_PUBLIC_APP_NAME: z.string().default("ReceiptRadar"),
+  NEXT_PUBLIC_APP_NAME: z.string().default('ReceiptRadar'),
 });
 
 export const env = schema.parse({

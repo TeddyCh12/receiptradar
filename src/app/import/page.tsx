@@ -1,79 +1,76 @@
-import { prisma } from "@/lib/prisma";
-import { parseEmailMinimal } from "@/lib/parseEmail";
-import { z } from "zod";
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
-import { env } from "@/lib/env";
-import { logger } from "@/lib/logger";
+import { env } from '@/lib/env';
+import { logger } from '@/lib/logger';
+import { parseEmailMinimal } from '@/lib/parseEmail';
+import { prisma } from '@/lib/prisma';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const formSchema = z.object({
-  raw: z.string().min(20, "Paste at least a few lines from a receipt email."),
+  raw: z.string().min(20, 'Paste at least a few lines from a receipt email.'),
 });
 
 async function getDemoAccountId() {
   const a = await prisma.account.findUnique({
-    where: { email: "demo@receiptradar.test" },
+    where: { email: 'demo@receiptradar.test' },
     select: { id: true },
   });
   if (!a) {
-    throw new Error("Demo account not found. Did you run the seed?");
+    throw new Error('Demo account not found. Did you run the seed?');
   }
   return a.id;
 }
 
-async function createFromRaw(formData: FormData) {
-  "use server";
+async function createFromRaw(formData: FormData): Promise<void> {
+  'use server';
   const parsed = formSchema.safeParse({
-    raw: String(formData.get("raw") ?? ""),
+    raw: String(formData.get('raw') ?? ''),
   });
-  if (!parsed.success) return { error: parsed.error.flatten().formErrors[0] };
+  if (!parsed.success) {
+    // Simple UX for now: bounce back with a query param
+    redirect('/import?error=paste+more+text');
+  }
 
   const { raw } = parsed.data;
   const p = parseEmailMinimal(raw);
 
   const accountId = await getDemoAccountId();
 
-  // Ensure we have a total; otherwise bail early
-  if (!p.totalCents) return { error: "Couldn't find a total in the email." };
+  if (!p.totalCents) {
+    redirect('/import?error=couldnt+find+total');
+  }
 
-  // Upsert merchant if we have a name
   let merchantId: string | undefined;
   if (p.merchant) {
     const existing = await prisma.merchant.findFirst({
       where: { name: p.merchant },
       select: { id: true },
     });
-  
-    if (existing) {
-      merchantId = existing.id;
-    } else {
-      const created = await prisma.merchant.create({
-        data: { name: p.merchant },
-        select: { id: true },
-      });
-      merchantId = created.id;
-    }
+    merchantId = existing
+      ? existing.id
+      : (await prisma.merchant.create({ data: { name: p.merchant }, select: { id: true } })).id;
   }
 
   const receipt = await prisma.receipt.create({
     data: {
       accountId,
-      merchantId,
-      orderId: undefined,
-      emailMessageId: undefined,
-      totalCents: p.totalCents,
-      currency: p.currency ?? "USD",
-      purchasedAt: p.purchasedAt ?? new Date(),
-      rawSource: { parser: "minimal@v0" },
+      merchantId: merchantId ?? null, // prisma type is string | null
+      // omit optional fields you don't use or set them to null explicitly
+      orderId: null,
+      emailMessageId: null,
+      totalCents: p.totalCents, // defined due to guard above
+      currency: p.currency,
+      purchasedAt: p.purchasedAt,
+      rawSource: { parser: 'minimal@v0' },
       rawText: raw,
       items: {
         create: [
           {
-            name: "Imported line",
+            name: 'Imported line',
             qty: 1,
-            unitPriceCents: p.totalCents, // fallback single-line item
+            unitPriceCents: p.totalCents!,
           },
         ],
       },
@@ -81,15 +78,14 @@ async function createFromRaw(formData: FormData) {
     select: { id: true },
   });
 
-  logger.info("receipt.created", {
-      env: env.NODE_ENV,
-      accountId,
-      merchantId,
-      receiptId: receipt.id,
-      totalCents: p.totalCents,
-      currency: p.currency,
+  logger.info('receipt.created', {
+    env: env.NODE_ENV,
+    accountId,
+    merchantId: merchantId ?? null,
+    receiptId: receipt.id,
+    totalCents: p.totalCents,
+    currency: p.currency,
   });
-
 
   redirect(`/receipts/${receipt.id}`);
 }
@@ -99,8 +95,7 @@ export default function ImportPage() {
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Manual Import</h1>
       <p className="text-sm text-gray-600">
-        Paste the body of a purchase email below. We'll parse what we can and
-        create a receipt.
+        Paste the body of a purchase email below. We will parse what we can and create a receipt.
       </p>
 
       <form action={createFromRaw} className="space-y-3">
@@ -111,10 +106,7 @@ export default function ImportPage() {
           required
         />
         <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-          >
+          <button type="submit" className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50">
             Import
           </button>
           <span className="text-xs text-gray-500">

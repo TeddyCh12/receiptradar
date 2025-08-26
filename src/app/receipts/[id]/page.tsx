@@ -1,10 +1,11 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { formatCents } from "@/lib/money";
-import { formatDate } from "@/lib/date";
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export const dynamic = "force-dynamic";
+import { formatDate } from '@/lib/date';
+import { formatCents } from '@/lib/money';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 async function getReceipt(id: string) {
   return prisma.receipt.findUnique({
@@ -16,16 +17,11 @@ async function getReceipt(id: string) {
   });
 }
 
-export default async function ReceiptDetail({
-  params,
-}: { params: { id: string } }) {
+export default async function ReceiptDetail({ params }: { params: { id: string } }) {
   const receipt = await getReceipt(params.id);
   if (!receipt) notFound();
 
-  const itemsTotal = receipt.items.reduce(
-    (sum, it) => sum + it.qty * it.unitPriceCents,
-    0
-  );
+  const itemsTotal = receipt.items.reduce((sum, it) => sum + it.qty * it.unitPriceCents, 0);
   const delta = itemsTotal - receipt.totalCents;
 
   return (
@@ -33,11 +29,9 @@ export default async function ReceiptDetail({
       {/* Header */}
       <div className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">
-            {receipt.merchant?.name ?? "Unknown Merchant"}
-          </h1>
+          <h1 className="text-2xl font-semibold">{receipt.merchant?.name ?? 'Unknown Merchant'}</h1>
           <p className="text-sm text-gray-600">
-            {formatDate(receipt.purchasedAt)}{" "}
+            {formatDate(receipt.purchasedAt)}{' '}
             {receipt.orderId ? (
               <span className="text-gray-400">• Order {receipt.orderId}</span>
             ) : null}
@@ -63,10 +57,7 @@ export default async function ReceiptDetail({
             {receipt.items.map((it, idx) => {
               const line = it.qty * it.unitPriceCents;
               return (
-                <tr
-                  key={it.id}
-                  className={`${idx % 2 ? "bg-gray-50/40" : "bg-white"} border-t`}
-                >
+                <tr key={it.id} className={`${idx % 2 ? 'bg-gray-50/40' : 'bg-white'} border-t`}>
                   <td className="px-4 py-3">{it.name}</td>
                   <td className="px-4 py-3">{it.qty}</td>
                   <td className="px-4 py-3 font-mono tabular-nums">

@@ -1,6 +1,8 @@
-import "./globals.css";
+import './globals.css';
 
-export const metadata = { title: "ReceiptRadar" };
+import { env } from '@/lib/env';
+
+export const metadata = { title: 'ReceiptRadar' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,13 +12,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="border-b bg-white/80 backdrop-blur sticky top-0 z-10">
           <nav className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
             <a href="/" className="font-semibold tracking-tight">
-              ReceiptRadar
+              {env.NEXT_PUBLIC_APP_NAME}
             </a>
             <div className="flex items-center gap-4 text-sm">
               <a href="/receipts" className="hover:underline underline-offset-4">
                 Receipts
               </a>
-              <a href="/import" className="hover:underline underline-offset-4">Import</a>
+              <a href="/import" className="hover:underline underline-offset-4">
+                Import
+              </a>
             </div>
           </nav>
         </header>

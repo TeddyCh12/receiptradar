@@ -1,19 +1,20 @@
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { formatCents } from "@/lib/money";
-import { formatDate } from "@/lib/date";
+import Link from 'next/link';
 
-export const dynamic = "force-dynamic";
+import { formatDate } from '@/lib/date';
+import { formatCents } from '@/lib/money';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 async function getReceipts() {
   const account = await prisma.account.findUnique({
-    where: { email: "demo@receiptradar.test" },
+    where: { email: 'demo@receiptradar.test' },
     select: { id: true },
   });
   if (!account) return [];
   return prisma.receipt.findMany({
     where: { accountId: account.id },
-    orderBy: { purchasedAt: "desc" },
+    orderBy: { purchasedAt: 'desc' },
     select: {
       id: true,
       purchasedAt: true,
@@ -31,9 +32,7 @@ export default async function ReceiptsPage() {
   return (
     <>
       <h1 className="text-2xl font-semibold mb-2">Receipts</h1>
-      <p className="text-sm text-gray-600 mb-6">
-        Latest purchases from your inbox.
-      </p>
+      <p className="text-sm text-gray-600 mb-6">Latest purchases from your inbox.</p>
 
       <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
         <table className="min-w-full text-sm">
@@ -49,16 +48,19 @@ export default async function ReceiptsPage() {
             {receipts.map((r, idx) => (
               <tr
                 key={r.id}
-                className={`${idx % 2 ? "bg-gray-50/40" : "bg-white"} border-t hover:bg-gray-50 transition-colors`}
+                className={`${idx % 2 ? 'bg-gray-50/40' : 'bg-white'} border-t hover:bg-gray-50 transition-colors`}
               >
                 <td className="px-4 py-3">
-                  <Link href={`/receipts/${r.id}`} className="block underline-offset-2 hover:underline">
+                  <Link
+                    href={`/receipts/${r.id}`}
+                    className="block underline-offset-2 hover:underline"
+                  >
                     {formatDate(r.purchasedAt)}
                   </Link>
                 </td>
                 <td className="px-4 py-3">
                   <Link href={`/receipts/${r.id}`} className="block">
-                    {r.merchant?.name ?? "—"}
+                    {r.merchant?.name ?? '—'}
                   </Link>
                 </td>
                 <td className="px-4 py-3">

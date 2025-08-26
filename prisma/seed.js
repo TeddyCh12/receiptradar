@@ -33,7 +33,7 @@ async function main() {
       items: {
         create: [
           { name: 'USB-C Cable', qty: 1, unitPriceCents: 1299 },
-          { name: 'Phone Case',  qty: 1, unitPriceCents: 1300 },
+          { name: 'Phone Case', qty: 1, unitPriceCents: 1300 },
         ],
       },
     },
