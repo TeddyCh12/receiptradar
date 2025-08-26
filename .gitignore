@@ -22,3 +22,5 @@ yarn-error.log*
 Thumbs.db
 .vscode/*
 !.vscode/settings.json
+
+/generated/prisma
