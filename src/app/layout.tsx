@@ -16,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/receipts" className="hover:underline underline-offset-4">
                 Receipts
               </a>
+              <a href="/import" className="hover:underline underline-offset-4">Import</a>
             </div>
           </nav>
         </header>
