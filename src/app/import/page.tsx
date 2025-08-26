@@ -3,6 +3,9 @@ import { parseEmailMinimal } from "@/lib/parseEmail";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 
+import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
+
 export const dynamic = "force-dynamic";
 
 const formSchema = z.object({
@@ -36,15 +39,22 @@ async function createFromRaw(formData: FormData) {
   if (!p.totalCents) return { error: "Couldn't find a total in the email." };
 
   // Upsert merchant if we have a name
-  let merchantId: string | undefined = undefined;
+  let merchantId: string | undefined;
   if (p.merchant) {
-    const m = await prisma.merchant.upsert({
+    const existing = await prisma.merchant.findFirst({
       where: { name: p.merchant },
-      update: {},
-      create: { name: p.merchant },
       select: { id: true },
     });
-    merchantId = m.id;
+  
+    if (existing) {
+      merchantId = existing.id;
+    } else {
+      const created = await prisma.merchant.create({
+        data: { name: p.merchant },
+        select: { id: true },
+      });
+      merchantId = created.id;
+    }
   }
 
   const receipt = await prisma.receipt.create({
@@ -71,6 +81,16 @@ async function createFromRaw(formData: FormData) {
     select: { id: true },
   });
 
+  logger.info("receipt.created", {
+      env: env.NODE_ENV,
+      accountId,
+      merchantId,
+      receiptId: receipt.id,
+      totalCents: p.totalCents,
+      currency: p.currency,
+  });
+
+
   redirect(`/receipts/${receipt.id}`);
 }
 
@@ -79,8 +99,8 @@ export default function ImportPage() {
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Manual Import</h1>
       <p className="text-sm text-gray-600">
-        Paste the body of a purchase email below. We’ll parse what we can and
-        create a receipt. (MVP parser)
+        Paste the body of a purchase email below. We'll parse what we can and
+        create a receipt.
       </p>
 
       <form action={createFromRaw} className="space-y-3">
