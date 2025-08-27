@@ -1,6 +1,7 @@
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url = env("DATABASE_URL")  // pooled
+  directUrl = env("DIRECT_URL")  // unpooled for migrations/introspection
 }
 
 generator client {
