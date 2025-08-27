@@ -1,7 +1,4 @@
 {
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
   "scripts": {
     "prisma:studio": "prisma studio",
     "prisma:generate": "prisma generate",
